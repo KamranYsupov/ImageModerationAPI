@@ -1,0 +1,39 @@
+version: '4.0'
+
+x-function: &python
+  volumes:
+    - ./:/app:rw
+    - poetry-volume:/opt/poetry:delegated
+  environment: &env-vars
+    POETRY_HOME: /opt/poetry
+    PYTHONPATH: /app
+  networks:
+    - internal
+  env_file:
+    .env
+
+services:
+  app:
+    <<: *python
+    container_name: ${PROJECT_NAME}_app
+    build:
+      context: .
+    ports:
+      - "8000:8000"
+    restart: on-failure
+
+  nginx:
+    container_name: ${PROJECT_NAME}_nginx
+    build: ./nginx
+    ports:
+      - "80:80"
+    depends_on:
+      - app
+    networks:
+      - internal
+
+volumes:
+  poetry-volume:
+
+networks:
+  internal:
